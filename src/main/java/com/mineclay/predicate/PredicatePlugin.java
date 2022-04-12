@@ -77,4 +77,12 @@ public class PredicatePlugin extends JavaPlugin {
     @Override
     public void onDisable() {
     }
+
+    public void addMethod(Class<? extends PredicateMethodBase> methodSource) {
+        service.addMethod(methodSource);
+    }
+
+    public boolean test(Player player, String line) {
+        return service.test(player, line);
+    }
 }
