@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     java
+    `maven-publish`
     id("com.github.johnrengelman.shadow") version ("7.1.2")
 }
 
@@ -50,8 +51,38 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 tasks.withType(ShadowJar::class.java) {
     archiveClassifier.set("dist")
+}
+
+val javaComponent = components["java"] as AdhocComponentWithVariants
+javaComponent.withVariantsFromConfiguration(configurations["shadowRuntimeElements"]) {
+    skip()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+
+            from(components["java"])
+        }
+    }
+    repositories {
+        maven {
+            val releasesRepoUrl = "https://maven.mineclay.com/repository/zhuapublic-release/"
+            val snapshotsRepoUrl = "https://maven.mineclay.com/repository/zhuapublic-snapshot/"
+            url = uri(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+            credentials {
+                username = project.findProperty("clayUsername").toString()
+                password = project.findProperty("clayPassword").toString()
+            }
+        }
+    }
 }
