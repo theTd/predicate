@@ -8,4 +8,4 @@ commands:
   predicate:
     permission: predicate
     usage: /<command> <player> <conditions> then <command-to-execute>
-    description: /predicate theTd '普通'=='普通' && matchset('event') then cpdc add event kill 1
+    description: "/predicate theTd 'normal'=='normal' && matchset('event') then cpdc add event kill 1"

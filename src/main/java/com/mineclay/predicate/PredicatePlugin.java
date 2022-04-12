@@ -1,6 +1,7 @@
 package com.mineclay.predicate;
 
 import groovy.lang.Binding;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -41,15 +42,12 @@ public class PredicatePlugin extends JavaPlugin {
             boolean concatCmd = false;
             StringBuilder expressionBuilder = new StringBuilder();
             StringBuilder commandBuilder = new StringBuilder();
-            for (String s : args) {
-                if (concatCmd) {
-                    commandBuilder.append(s).append(" ");
+            for (int i = 1; i < args.length; i++) {
+                String s = args[i];
+                if (s.equals("then")) {
+                    concatCmd = true;
                 } else {
-                    if (s.equals("then")) {
-                        concatCmd = true;
-                    } else {
-                        expressionBuilder.append(s).append(" ");
-                    }
+                    (concatCmd ? commandBuilder : expressionBuilder).append(s).append(" ");
                 }
             }
             if (commandBuilder.length() == 0) return false;
@@ -58,14 +56,19 @@ public class PredicatePlugin extends JavaPlugin {
             if (expressionBuilder.length() != 0) {
                 expressionBuilder.deleteCharAt(expressionBuilder.length() - 1);
                 String expr = expressionBuilder.toString();
-                if (service.test(targetPlayer, expr)) {
-                    if (sender instanceof Player) {
-                        sender.sendMessage(ChatColor.GREEN + "test passed");
+                try {
+                    if (service.test(targetPlayer, expr)) {
+                        if (sender instanceof Player) {
+                            sender.sendMessage(ChatColor.GREEN + "test passed");
+                        }
+                    } else {
+                        if (sender instanceof Player) {
+                            sender.sendMessage(ChatColor.GRAY + "test failed");
+                        }
+                        return true;
                     }
-                } else {
-                    if (sender instanceof Player) {
-                        sender.sendMessage(ChatColor.GRAY + "test failed");
-                    }
+                } catch (Throwable e) {
+                    sender.sendMessage(ChatColor.RED + e.toString());
                     return true;
                 }
             }
