@@ -1,7 +1,6 @@
 package com.mineclay.predicate;
 
 import groovy.lang.Binding;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
