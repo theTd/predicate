@@ -32,10 +32,15 @@ public class PredicatePlugin extends JavaPlugin {
         Objects.requireNonNull(getCommand("predicate")).setExecutor((sender, command, label, args) -> {
             if (args.length < 1) return false;
             String target = args[0];
-            Player targetPlayer = Bukkit.getPlayerExact(target);
-            if (targetPlayer == null) {
-                sender.sendMessage(ChatColor.RED + "player not found");
-                return true;
+            Player targetPlayer;
+            if (target.equalsIgnoreCase("server")) {
+                targetPlayer = null;
+            } else {
+                targetPlayer = Bukkit.getPlayerExact(target);
+                if (targetPlayer == null) {
+                    sender.sendMessage(ChatColor.RED + "player not found");
+                    return true;
+                }
             }
 
             boolean concatCmd = false;
