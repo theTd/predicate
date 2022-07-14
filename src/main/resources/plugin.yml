@@ -4,6 +4,8 @@ version: ${version}
 author: i@thetd.me
 depend:
   - groovyrt
+softdepend:
+  - CircleLink-bukkit
 commands:
   predicate:
     permission: predicate

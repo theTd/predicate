@@ -29,6 +29,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.22")
     annotationProcessor("org.projectlombok:lombok:1.18.22")
     compileOnly("org.spigotmc:spigot:1.12.2")
+    compileOnly("com.mineclay:circle-link-bukkit:1.8.0")
 //    compileOnly("io.papermc.paper:paper-server:1.18.2-R0.1-SNAPSHOT")
 //
 //    testImplementation("io.papermc.paper:paper-server:1.18.2-R0.1-SNAPSHOT")

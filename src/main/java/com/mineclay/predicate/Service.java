@@ -58,13 +58,14 @@ class Service {
 
     @SneakyThrows
     public void addMethod(Class<? extends PredicateMethodBase> methodSource) {
+        PredicateMethodBase base = methodSource.getConstructor().newInstance();
         for (Method method : methodSource.getDeclaredMethods()) {
             if (!Modifier.isStatic(method.getModifiers()) && Modifier.isPublic(method.getModifiers())) {
                 PredicateMethodInstance ctx = new PredicateMethodInstance();
                 ctx.name = method.getName();
                 ctx.source = methodSource;
                 ctx.method = method;
-                ctx.base = methodSource.getConstructor().newInstance();
+                ctx.base = base;
                 String signature = getMethodSignature(method);
                 PredicateMethodInstance replace = methods.put(signature, ctx);
                 if (replace != null) {

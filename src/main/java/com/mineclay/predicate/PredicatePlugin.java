@@ -74,6 +74,11 @@ public class PredicatePlugin extends JavaPlugin {
             Bukkit.dispatchCommand(sender, commandToRun);
             return true;
         });
+
+        addMethod(BuiltinMethods.class);
+        if (getServer().getPluginManager().isPluginEnabled("CircleLink-bukkit")) {
+            addMethod(CircleLinkMethods.class);
+        }
     }
 
     @Override
