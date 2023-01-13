@@ -7,5 +7,17 @@ import org.bukkit.entity.Player;
  * any public method will be exposed
  */
 public class PredicateMethodBase {
-    protected Player player;
+
+    final ThreadLocal<Player> playerThreadLocal = new ThreadLocal<>();
+
+    protected Player getPlayer() {
+        return playerThreadLocal.get();
+    }
+
+    /**
+     * extend this to expose dynamic properties
+     */
+    protected Object getProperty(String key) {
+        return null;
+    }
 }

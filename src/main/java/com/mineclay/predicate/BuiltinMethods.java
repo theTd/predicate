@@ -7,11 +7,19 @@ import java.net.InetAddress;
 
 public class BuiltinMethods extends PredicateMethodBase {
     @SneakyThrows
-    public String hostname() {
-        return InetAddress.getLocalHost().getHostName();
+    @Override
+    protected Object getProperty(String key) {
+        switch (key) {
+            case "hostname":
+                return InetAddress.getLocalHost().getHostName();
+            case "pid":
+                return pid();
+            default:
+                return null;
+        }
     }
 
-    public String pid() {
+    private String pid() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         return name.substring(0, name.indexOf('@'));
     }

@@ -1,12 +1,19 @@
 package com.mineclay.predicate;
 
 import groovy.lang.Binding;
+import groovy.lang.GString;
+import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.logging.Level;
 
 public class PredicatePlugin extends JavaPlugin {
 
@@ -25,11 +32,10 @@ public class PredicatePlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         binding.setVariable("server", getServer());
-        service.addMethod(NameMethod.class);
 
         Bukkit.getScheduler().runTaskTimer(this, service::rebuild, 20, 20);
 
-        Objects.requireNonNull(getCommand("predicate")).setExecutor((sender, command, label, args) -> {
+        CommandExecutor cmd = (sender, command, label, args) -> {
             if (args.length < 1) return false;
             String target = args[0];
             Player targetPlayer;
@@ -60,25 +66,63 @@ public class PredicatePlugin extends JavaPlugin {
             if (expressionBuilder.length() != 0) {
                 expressionBuilder.deleteCharAt(expressionBuilder.length() - 1);
                 String expr = expressionBuilder.toString();
-                try {
-                    if (service.test(targetPlayer, expr)) {
-                        if (sender instanceof Player) {
-                            sender.sendMessage(ChatColor.GREEN + "test passed");
+                boolean async = label.toLowerCase().contains("async");
+                boolean template = commandToRun.contains("$");
+                CompletableFuture<Supplier<Boolean>> screen = service.compile(targetPlayer, expr, Boolean.class);
+                CompletableFuture<Supplier<String>> cmdFuture;
+                if (template) {
+                    cmdFuture = screen.thenCompose(sBool -> service.compile(targetPlayer, "\"\"\"" + commandToRun + "\"\"\"", GString.class)
+                            .thenApply(sCmd -> () -> {
+                                if (sBool.get()) {
+                                    return sCmd.get().toString();
+                                } else {
+                                    return null;
+                                }
+                            }));
+                } else {
+                    cmdFuture = screen.thenApply(sBool -> () -> {
+                        if (sBool.get()) {
+                            return commandToRun;
+                        } else {
+                            return null;
                         }
-                    } else {
-                        if (sender instanceof Player) {
-                            sender.sendMessage(ChatColor.GRAY + "test failed");
-                        }
-                        return true;
-                    }
-                } catch (Throwable e) {
-                    sender.sendMessage(ChatColor.RED + e.toString());
-                    return true;
+                    });
                 }
+//
+                cmdFuture.thenAccept(sCmd -> {
+                    Runnable r = () -> {
+                        String finalCmd = sCmd.get();
+                        if (finalCmd != null) {
+                            if (sender instanceof Player) {
+                                sender.sendMessage(ChatColor.GREEN + "test passed");
+                            }
+                            if (async) {
+                                Bukkit.getScheduler().runTask(PredicatePlugin.inst(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd));
+                            } else {
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCmd);
+                            }
+                        } else {
+                            if (sender instanceof Player) {
+                                sender.sendMessage(ChatColor.GRAY + "test failed");
+                            }
+                        }
+                    };
+                    if (async) {
+                        Bukkit.getScheduler().runTaskAsynchronously(this, r);
+                    } else {
+                        Bukkit.getScheduler().runTask(this, r);
+                    }
+                }).exceptionally((ex) -> {
+                    sender.sendMessage(ChatColor.RED + "" + ex.getCause());
+                    return null;
+                });
+                return true;
             }
             Bukkit.dispatchCommand(sender, commandToRun);
             return true;
-        });
+        };
+        Objects.requireNonNull(getCommand("predicate")).setExecutor(cmd);
+        Objects.requireNonNull(getCommand("predicateAsync")).setExecutor(cmd);
 
         addMethod(BuiltinMethods.class);
         if (getServer().getPluginManager().isPluginEnabled("CircleLink-bukkit")) {
@@ -94,7 +138,13 @@ public class PredicatePlugin extends JavaPlugin {
         service.addMethod(methodSource);
     }
 
+    @SneakyThrows
     public boolean test(Player player, String line) {
-        return service.test(player, line);
+        return service.compile(player, line, Boolean.class).get().get();
+    }
+
+    @SneakyThrows
+    public String template(Player player, String template) {
+        return service.compile(player, "\"\"\"" + template + "\"\"\"", GString.class).get().get().toString();
     }
 }

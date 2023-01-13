@@ -9,5 +9,8 @@ softdepend:
 commands:
   predicate:
     permission: predicate
-    usage: /<command> <player> <conditions> then <command-to-execute>
+    usage: /<command> <player/"server"> <conditions> then <command-to-execute>
     description: "/predicate theTd 'normal'=='normal' && matchset('event') then cpdc add event kill 1"
+  predicateAsync:
+    permission: predicate
+    usage: /<command> <player/"server"> <conditions> then <command-to-execute>

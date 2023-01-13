@@ -3,11 +3,12 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     java
     `maven-publish`
+    groovy
     id("com.github.johnrengelman.shadow") version ("7.1.2")
 }
 
 group = "com.mineclay"
-version = "1.0.1-SNAPSHOT"
+version = "1.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -54,6 +55,19 @@ java {
     }
     withJavadocJar()
     withSourcesJar()
+}
+
+sourceSets.main {
+    java {
+        setSrcDirs(emptyList<File>())
+    }
+    groovy {
+        srcDir("src/main/java")
+    }
+}
+
+tasks.assemble {
+    dependsOn("shadowJar")
 }
 
 tasks.withType(ShadowJar::class.java) {
