@@ -7,15 +7,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
-public class PredicatePlugin extends JavaPlugin {
+public class PredicatePlugin extends JavaPlugin implements Listener {
 
     private static PredicatePlugin inst;
     private final Binding binding = new Binding();
@@ -33,7 +35,7 @@ public class PredicatePlugin extends JavaPlugin {
     public void onEnable() {
         binding.setVariable("server", getServer());
 
-        Bukkit.getScheduler().runTaskTimer(this, service::rebuild, 20, 20);
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, service::rebuild, 20, 20);
 
         CommandExecutor cmd = (sender, command, label, args) -> {
             if (args.length < 1) return false;
@@ -128,10 +130,12 @@ public class PredicatePlugin extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("CircleLink-bukkit")) {
             addMethod(CircleLinkMethods.class);
         }
+        Bukkit.getPluginManager().registerEvents(this, this);
     }
 
     @Override
     public void onDisable() {
+        HandlerList.unregisterAll(((Listener) this));
     }
 
     public void addMethod(Class<? extends PredicateMethodBase> methodSource) {
@@ -146,5 +150,10 @@ public class PredicatePlugin extends JavaPlugin {
     @SneakyThrows
     public String template(Player player, String template) {
         return service.compile(player, "\"\"\"" + template + "\"\"\"", GString.class).get().get().toString();
+    }
+
+    @EventHandler
+    void autoRemoveMethod(PluginDisableEvent e) {
+        service.removeMethods(m -> m.providingPlugin == e.getPlugin());
     }
 }

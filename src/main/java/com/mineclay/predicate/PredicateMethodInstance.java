@@ -1,5 +1,7 @@
 package com.mineclay.predicate;
 
+import org.bukkit.plugin.java.JavaPlugin;
+
 import java.lang.reflect.Method;
 
 class PredicateMethodInstance {
@@ -7,4 +9,5 @@ class PredicateMethodInstance {
     Class<?> source;
     Method method;
     PredicateMethodBase base;
+    JavaPlugin providingPlugin;
 }

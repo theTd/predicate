@@ -12,6 +12,7 @@ import net.bytebuddy.dynamic.loading.ByteArrayClassLoader;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.codehaus.groovy.control.CompilerConfiguration;
 
 import java.lang.reflect.Method;
@@ -21,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +67,10 @@ class Service {
 
     boolean dirty = true;
 
+    public void removeMethods(Predicate<PredicateMethodInstance> filter) {
+        dirty = methods.values().removeIf(filter);
+    }
+
     @SneakyThrows
     public void addMethod(Class<? extends PredicateMethodBase> methodSource) {
         PredicateMethodBase base = methodSource.getConstructor().newInstance();
@@ -76,6 +82,7 @@ class Service {
                 ctx.source = methodSource;
                 ctx.method = method;
                 ctx.base = base;
+                ctx.providingPlugin = JavaPlugin.getProvidingPlugin(methodSource);
                 String signature = getMethodSignature(method);
                 PredicateMethodInstance replace = methods.put(signature, ctx);
                 if (replace != null) {
