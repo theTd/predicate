@@ -2,18 +2,14 @@ package com.mineclay.predicate
 
 import org.bukkit.Bukkit
 import org.bukkit.Server
-import org.bukkit.entity.Player
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 abstract class ScriptBase extends Script {
-    private final ThreadLocal<Player> playerThreadLocal = new ThreadLocal<Player>()
-    Server server = Bukkit.server
-
-    void setPlayer(Player player) {
-        this.playerThreadLocal.set(player)
-    }
+    final Server server = Bukkit.server
+    PropertyExtractor propertyExtractor;
+    PropertyInterceptor propertyInterceptor;
 
     <T> T sync(Closure<T> block) {
         if (Bukkit.primaryThread) {
@@ -31,13 +27,20 @@ abstract class ScriptBase extends Script {
         }
     }
 
-    def propertyMissing(name) {
+    def propertyMissing(String name) {
+        if (propertyInterceptor != null) {
+            def fromInterceptor = propertyInterceptor.getProperty(name)
+            if (fromInterceptor != null) {
+                return fromInterceptor
+            }
+        }
         def find = findProperty(name)
         if (find != null) {
             return find
         }
     }
 
+    // method delegation target
     @SuppressWarnings('GrMethodMayBeStatic')
     Object findProperty(String propertyName) {
         return null

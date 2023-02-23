@@ -1,0 +1,22 @@
+conditions:
+  onmachine: hostname.contains(arg)
+  containstags: tags.containsAll(arg.split(","))
+  containstag: tags.contains(arg)
+
+commands:
+  forserversbytag:
+    xargs: os exec tags %tags%
+    args:
+      - tags
+    delim: executes
+    help: |
+      >> shutdown servers contains tag1 and tag2
+      forservers tag1,tag2 executes stop -> os exec tags tag1,tag2 stop
+      >> shutdown servers contains tag ct on machine fgs11
+      forservers ct onmachine fgs11 executes stop -> os exec tag ct predicate server hostname.contains("fgs11") then stop
+  forallservers:
+    xargs: os exec server-all
+    delim: executes
+    help: |
+      >> shutdown all servers on machine fgs11
+      forallservers onmachine fgs11 executes stop -> os exec-all hostname().contains("fgs11") then stop

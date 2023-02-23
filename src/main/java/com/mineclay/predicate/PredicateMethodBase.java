@@ -8,14 +8,17 @@ import org.bukkit.entity.Player;
  */
 public class PredicateMethodBase {
 
-    final ThreadLocal<Player> playerThreadLocal = new ThreadLocal<>();
+    final static ThreadLocal<Player> PLAYER_THREAD_LOCAL = new ThreadLocal<>();
 
     protected Player getPlayer() {
-        return playerThreadLocal.get();
+        return PLAYER_THREAD_LOCAL.get();
     }
 
     /**
      * extend this to expose dynamic properties
+     *
+     * @param key dynamic property name
+     * @return dynamic property value
      */
     protected Object getProperty(String key) {
         return null;
