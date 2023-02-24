@@ -40,23 +40,21 @@ public class ASTHelper {
     }
 
     private static boolean findVariableUsages(Expression exp, Function<String, Boolean> acceptor) {
-        boolean continueSearch;
         if (exp instanceof MethodCallExpression) {
             MethodCallExpression methodCallExpression = (MethodCallExpression) exp;
-            return findVariableUsages(methodCallExpression.getArguments(), acceptor);
+            return findVariableUsages(methodCallExpression.getObjectExpression(), acceptor) &&
+                    findVariableUsages(methodCallExpression.getArguments(), acceptor);
         } else if (exp instanceof VariableExpression) {
             VariableExpression variableExpression = (VariableExpression) exp;
             return acceptor.apply(variableExpression.getName());
         } else if (exp instanceof BinaryExpression) {
             BinaryExpression binaryExpression = (BinaryExpression) exp;
-            continueSearch = findVariableUsages(binaryExpression.getLeftExpression(), acceptor);
-            if (!continueSearch) continueSearch = findVariableUsages(binaryExpression.getRightExpression(), acceptor);
-            return continueSearch;
+            return findVariableUsages(binaryExpression.getLeftExpression(), acceptor) &&
+                    findVariableUsages(binaryExpression.getRightExpression(), acceptor);
         } else if (exp instanceof ArgumentListExpression) {
             ArgumentListExpression argumentListExpression = (ArgumentListExpression) exp;
             for (Expression expression : argumentListExpression.getExpressions()) {
-                continueSearch = findVariableUsages(expression, acceptor);
-                if (!continueSearch) return continueSearch;
+                if (!findVariableUsages(expression, acceptor)) return false;
             }
         }
         return true;

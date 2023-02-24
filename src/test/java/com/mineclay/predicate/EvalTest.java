@@ -18,7 +18,7 @@ public class EvalTest {
 
     @Test
     public void run() throws Exception {
-        String expression = "callmethod(innermethod(arg, arg2+arg3))";
+        String expression = "arg.call arg1";
         try (GroovyClassLoader cl = new GroovyClassLoader()) {
             CompilationUnit unit = new CompilationUnit(null, new GroovyCodeSource(expression, "test", GroovyShell.DEFAULT_CODE_BASE).getCodeSource(), cl);
             unit.compile(Phases.CLASS_GENERATION);
@@ -38,6 +38,7 @@ public class EvalTest {
     private void findVariable(Expression exp, Consumer<String> acceptor) {
         if (exp instanceof MethodCallExpression) {
             MethodCallExpression methodCallExpression = (MethodCallExpression) exp;
+            findVariable(methodCallExpression.getObjectExpression(), acceptor);
             findVariable(methodCallExpression.getArguments(), acceptor);
         }
         if (exp instanceof VariableExpression) {
