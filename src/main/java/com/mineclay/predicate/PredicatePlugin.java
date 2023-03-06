@@ -21,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.StringReader;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -220,7 +221,10 @@ public class PredicatePlugin extends JavaPlugin implements Listener {
             cmd = constructor.newInstance(command, this);
             SimpleCommandMap cmdMap = (SimpleCommandMap) getServer().getClass().getDeclaredMethod("getCommandMap").invoke(getServer());
             cmdMap.register(getName(), cmd);
-            getServer().getClass().getDeclaredMethod("syncCommands").invoke(getServer());
+            try {
+                getServer().getClass().getDeclaredMethod("syncCommands").invoke(getServer());
+            } catch (NoSuchMethodException ignored) {
+            }
         }
         return cmd;
     }
